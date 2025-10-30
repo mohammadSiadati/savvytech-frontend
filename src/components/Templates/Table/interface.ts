@@ -5,13 +5,11 @@ export type ShoppingList = {
   category: string;
   name: string;
   quantity: number;
-  unit: string;
 };
 
 export type TableHeader = {
   key: string | number;
   label: string;
-  unit?: string;
   className?: string;
 };
 

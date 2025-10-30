@@ -1,10 +1,9 @@
 import { InputHTMLAttributes } from 'react';
 
-export default interface InputProps
+export default interface IInputProps
   extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  className?: string;
+  label: string;
   required?: boolean;
-  type?: 'text' | 'number';
+  type?: 'text' | 'number' | 'email' | 'password';
   onValidChange?: (value: string, isValid: boolean) => void;
 }

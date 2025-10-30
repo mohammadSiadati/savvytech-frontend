@@ -1,160 +1,127 @@
+'use client';
+
+import { FC, useState } from 'react';
 import Table from '@/components/Templates/Table/Table';
-import { shoppingList, tableHeader } from '../../../../const';
-import { useEffect, useState } from 'react';
-import { ShoppingList } from '@/components/Templates/Table/interaface';
 import Modal from '@/components/Organisms/Modal/Modal';
+import { shoppingList, tableHeader } from '../../../../const';
 import useOpenModal from '../../../../hook/useOpenModal';
-import Input from '@/components/atoms/Input/Input';
-import { create } from 'domain';
+import { ShoppingList } from '@/components/Templates/Table/interface';
+import CreateItem from '@/components/Templates/CreateItem/CreateItem';
+import EditItem from '@/components/Templates/EditItem/EditItem';
 
-const TaskManajer = () => {
+interface ItemForm {
+  category: string;
+  itemName: string;
+  quantity: number;
+}
+
+const TaskManager: FC = () => {
   const [data, setData] = useState(shoppingList);
-  const [rowData, setRowData] = useState<ShoppingList | null>(null);
-  const [daleteModal, handleDeleteModal] = useOpenModal();
+  const [selectedRow, setSelectedRow] = useState<ShoppingList | null>(null);
 
-  const [createModal, handleCreateModal] = useOpenModal();
-  const [createItem, setCreateItem] = useState({
+  // Delete modal
+  const [isDeleteOpen, toggleDeleteModal] = useOpenModal();
+
+  // Create modal
+  const [isCreateOpen, toggleCreateModal] = useOpenModal();
+  const [createForm, setCreateForm] = useState({
     category: '',
-    ItemName: '',
+    itemName: '',
     quantity: 0,
   });
 
-  const [editModal, handleEditModal] = useOpenModal();
-  const [editRow, setEditRow] = useState({
-    category: rowData?.category || '',
-    ItemName: rowData?.name || '',
-    quantity: rowData?.quantity || 0,
+  // Edit modal
+  const [isEditOpen, toggleEditModal] = useOpenModal();
+  const [editForm, setEditForm] = useState<ItemForm>({
+    category: '',
+    itemName: '',
+    quantity: 0,
   });
 
-  useEffect(() => {
-    if (rowData) {
-      setEditRow({
-        category: rowData.category,
-        ItemName: rowData.name,
-        quantity: rowData.quantity,
-      });
-    }
-  }, [rowData]);
+  // Handlers
+  const handleDeleteRow = () => {
+    setData((prev) => prev.filter((item) => item.id !== selectedRow?.id));
+    toggleDeleteModal();
+  };
 
-  function deleteRowHandler() {
-    setData(() => data?.filter((item) => item.id !== rowData?.id));
-    handleDeleteModal();
-  }
-
-  function handleRowEditModal() {
+  const handleEditRow = () => {
     setData((prev) =>
       prev.map((item) =>
-        item.id === rowData?.id
+        item.id === selectedRow?.id
           ? {
               ...item,
-              name: editRow?.ItemName,
-              category: editRow.category,
-              quantity: editRow.quantity,
+              name: editForm.itemName,
+              category: editForm.category,
+              quantity: editForm.quantity,
             }
           : item
       )
     );
-    handleEditModal();
-  }
+    toggleEditModal();
+  };
+
+  const handleAddItem = () => {
+    const newItem = {
+      id: Date.now(),
+      category: createForm.category,
+      name: createForm.itemName,
+      quantity: createForm.quantity,
+    };
+    setData((prev) => [...prev, newItem]);
+    toggleCreateModal();
+    setCreateForm({ category: '', itemName: '', quantity: 0 });
+  };
+
   return (
     <>
       <Table
-        setRowData={setRowData}
+        setRowData={setSelectedRow}
         tableHeader={tableHeader}
         shoppingList={data}
         onEdit={(row) => {
-          handleEditModal();
-          setRowData(row);
+          setSelectedRow(row);
+          setEditForm({
+            category: row.category || '',
+            itemName: row.name || '',
+            quantity: row.quantity || 0,
+          });
+          toggleEditModal();
         }}
-        onDelete={() => handleDeleteModal()}
-        onCreate={() => handleCreateModal()}
+        onDelete={() => toggleDeleteModal()}
+        onCreate={() => toggleCreateModal()}
       />
-      {daleteModal && (
+
+      {isDeleteOpen && (
         <Modal
-          onClick={deleteRowHandler}
+          onClick={handleDeleteRow}
           label="Delete"
-          title={'delete row'}
-          onCancel={handleDeleteModal}
-          desc={'would you like to delete this row?'}
+          title="Delete Row"
+          onCancel={toggleDeleteModal}
+          desc="Would you like to delete this row?"
         />
       )}
 
-      {editModal && (
-        <Modal
-          onClick={() => handleRowEditModal()}
-          label="Edit"
-          title="edit row"
-          onCancel={handleEditModal}
-          desc={'would you like to edit this row?'}
-        >
-          <Input
-            label="Category"
-            type="text"
-            required
-            value={editRow?.category}
-            defaultValue={rowData?.category}
-            onChange={(e) =>
-              setEditRow({ ...editRow, category: e.target.value })
-            }
-          />
-          <Input
-            label="Item Name"
-            type="text"
-            defaultValue={rowData?.name}
-            value={editRow?.ItemName}
-            required
-            onChange={(e) =>
-              setEditRow({ ...editRow, ItemName: e.target.value })
-            }
-          />
-          <Input
-            label="Quantity"
-            type="number"
-            required
-            value={editRow?.quantity}
-            defaultValue={rowData?.quantity}
-            onChange={(e) =>
-              setEditRow({ ...editRow, quantity: Number(e.target.value) })
-            }
-          />
-        </Modal>
+      {isEditOpen && (
+        <EditItem
+          handleEditRow={handleEditRow}
+          toggleEditModal={() => {
+            toggleEditModal();
+          }}
+          editForm={editForm}
+          setEditForm={setEditForm}
+        />
       )}
 
-      {createModal && (
-        <Modal
-          onClick={() => handleCreateModal()}
-          label="Create"
-          title="Create row"
-          onCancel={handleEditModal}
-          desc={'would you like to Create this row?'}
-        >
-          <Input
-            label="Category"
-            type="text"
-            required
-            value={createItem.category}
-            onChange={(e) =>
-              setEditRow({ ...editRow, category: e.target.value })
-            }
-          />
-          <Input
-            label="Item Name"
-            type="text"
-            value={createItem.ItemName}
-            required
-            onChange={(e) => setCreateItem({ ItemName: e.target.value })}
-          />
-          <Input
-            label="Quantity"
-            type="number"
-            required
-            value={createItem.quantity}
-            onChange={(e) => setEditRow({ quantity: Number(e.target.value) })}
-          />
-        </Modal>
+      {isCreateOpen && (
+        <CreateItem
+          handleAddItem={handleAddItem}
+          toggleCreateModal={toggleCreateModal}
+          createForm={createForm}
+          setCreateForm={setCreateForm}
+        />
       )}
     </>
   );
 };
 
-export default TaskManajer;
+export default TaskManager;

@@ -1,52 +1,49 @@
+import { FC } from 'react';
 import Button from '@/components/atoms/Button/Button';
-import { FC, ReactNode } from 'react';
+import { IModalProps } from './interface';
 
-type TPropsModal = {
-  label: string;
-  title: string;
-  desc: string;
-  onClick?: () => void;
-  onCancel?: () => void;
-  onSubmit?: () => void;
-  children?: ReactNode;
-};
-
-const Modal: FC<TPropsModal> = ({
+const Modal: FC<IModalProps> = ({
   label,
   title,
   desc,
   onClick,
-  onSubmit,
   onCancel,
   children,
+  disabled,
 }) => {
   return (
     <>
       <div
-        className="fixed inset-0  bg-opacity-50 backdrop-blur-sm z-40"
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
         onClick={onCancel}
-      ></div>
+      />
 
-      <div className="fixed inset-0 flex items-center justify-center z-50">
-        <div className="bg-white rounded-2xl shadow-lg p-6 text-center relative w-[50%]">
-          <h2 className="text-xl font-semibold mb-4">{title}</h2>
-          <p className="text-gray-600 mb-6">{desc}</p>
+      <div className="fixed inset-0 flex items-center justify-center z-50 px-4">
+        <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 w-full max-w-lg">
+          {title && (
+            <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-100">
+              {title}
+            </h2>
+          )}
+          {desc && (
+            <p className="text-gray-600 dark:text-gray-400 mb-6">{desc}</p>
+          )}
 
           {children}
 
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-center gap-3 mt-6">
             {onCancel && (
               <Button
                 label="Cancel"
                 onClick={onCancel}
-                className="px-4 py-2 rounded-lg border border-gray-300  hover:bg-gray-100 transition"
+                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
               />
             )}
             <Button
-              onClick={onClick}
               label={label}
-              onSubmit={onSubmit}
-              className="px-4 py-2 text-white bg-red-500 rounded-lg hover:bg-red-600 transition"
+              disabled={disabled}
+              onClick={onClick}
+              className="px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
         </div>
